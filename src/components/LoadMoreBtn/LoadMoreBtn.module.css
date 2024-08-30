@@ -1,0 +1,21 @@
+.loadMore {
+    width: 180px;
+    height: 40px;
+    border: none;
+    cursor: pointer;
+    border-radius: 15px;
+    background-color: darkgrey;
+    color: white;
+    font-size: 24px;
+}
+
+.loadMore:hover{
+    background-color: darkcyan;
+}
+.loaderWrapper{
+    margin-top: 20px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: center;
+}
+

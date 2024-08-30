@@ -1,35 +1,103 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import React, { useEffect, useState } from 'react';
+import css from './App.module.css';
+import ImageGallery from './components/ImageGallery/ImageGallery';
+import { searchImages } from './services/api';
+import SearchBar from './components/SearchBar/SearchBar';
+import { Circles } from 'react-loader-spinner';
+import ErrorMessage from './components/ErrorMessage/ErrorMessage';
+import LoadMoreBtn from './components/LoadMoreBtn/LoadMoreBtn';
+import ImageModal from './components/ImageModal/ImageModal';
 
-function App() {
-  const [count, setCount] = useState(0)
-
-  return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+interface ImageData {
+  id: string;
+  urls: {
+    small: string;
+    full: string;
+  };
+  alt_description: string;
 }
 
-export default App
+interface ErrorState {
+  message: string;
+}
+
+const App: React.FC = () => {
+  const [data, setData] = useState<ImageData[]>([]);
+  const [query, setQuery] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<ErrorState | null>(null);
+  const [page, setPage] = useState<number>(1);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+
+  useEffect(() => {
+    const getImagesData = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await searchImages(query, page);
+        setData(prevData => [...prevData, ...response]);
+        console.log(response);
+      } catch (error) {
+        console.error(error);
+        setError({ message: 'An error occurred while fetching images.' });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (query) {
+      getImagesData();
+    }
+  }, [query, page]);
+
+  const handleSearch = (searchQuery: string) => {
+    setQuery(searchQuery);
+    setData([]);
+    setPage(1);
+  };
+
+  const handleLoadMore = () => {
+    setPage(prevPage => prevPage + 1);
+  };
+
+  const handleImageClick = (image: string) => {
+    setSelectedImage(image);
+  };
+
+  const handleCloseModal = () => {
+    setSelectedImage(null);
+  };
+
+  return (
+    <div className={css.container}>
+      <SearchBar onSearch={handleSearch} />
+
+      {error ? (
+        <ErrorMessage message={error.message} />
+      ) : (
+        <>
+          <ImageGallery data={data} onImageClick={handleImageClick} />
+          {data.length > 0 && !loading && (
+            <LoadMoreBtn onClick={handleLoadMore} />
+          )}
+        </>
+      )}
+      <ImageModal image={selectedImage} onClose={handleCloseModal} />
+      {loading && (
+        <div className={css.load}>
+          <Circles
+            height="80"
+            width="80"
+            color="#4fa94d"
+            ariaLabel="circles-loading"
+            wrapperStyle={{}}
+            wrapperClass=""
+            visible={true}
+          />
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default App;

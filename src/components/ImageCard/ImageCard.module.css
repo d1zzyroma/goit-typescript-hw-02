@@ -1,0 +1,8 @@
+.imageCard {
+  cursor: pointer;
+}
+
+.image {
+  width: 360px;
+  height: 200px;
+}
