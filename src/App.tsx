@@ -8,14 +8,16 @@ import ErrorMessage from './components/ErrorMessage/ErrorMessage';
 import LoadMoreBtn from './components/LoadMoreBtn/LoadMoreBtn';
 import ImageModal from './components/ImageModal/ImageModal';
 
+
 interface ImageData {
   id: string;
   urls: {
     small: string;
     full: string;
   };
-  alt_description: string;
+  alt_description?: string; // alt_description може бути відсутнім
 }
+
 
 interface ErrorState {
   message: string;
@@ -37,9 +39,13 @@ const App: React.FC = () => {
         const response = await searchImages(query, page);
         setData(prevData => [...prevData, ...response]);
         console.log(response);
-      } catch (error) {
+      } catch (error: unknown) {
         console.error(error);
-        setError({ message: 'An error occurred while fetching images.' });
+        if (error instanceof Error) {
+          setError({ message: error.message });
+        } else {
+          setError({ message: 'An unknown error occurred.' });
+        }
       } finally {
         setLoading(false);
       }
